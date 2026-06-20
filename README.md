@@ -63,7 +63,10 @@ Database data is stored in a named Docker volume so it persists across container
 ## Screenshots
 
 ![docker compose up build](screenshots/Docker%20compose%20up%20successful.jpeg)
+*docker compose up --build completing with all three containers started successfully*
 
 ![docker ps output showing vacation_db, vacation_backend, and vacation_frontend all with a status of Up](screenshots/Containers%20running.jpeg)
+*docker ps output showing vacation_db, vacation_backend and vacation_frontend all running*
 
 ![The application open in the browser at http://localhost and countries were successfully added](screenshots/Countries%20added.jpeg)
+*The application running in the browser at http://localhost and countries successfully added and displayed*
