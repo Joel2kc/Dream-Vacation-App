@@ -29,13 +29,26 @@ app.get('/api/destinations', async (req, res) => {
 app.post('/api/destinations', async (req, res) => {
   const { country } = req.body;
   try {
-    const response = await axios.get(`${COUNTRIES_API_BASE_URL}/name/${country}`);
-    const countryInfo = response.data[0];
-    
+    const capitalRes = await axios.post('https://countriesnow.space/api/v0.1/countries/capital', {
+      country: country
+    });
+
+    if (capitalRes.data.error) {
+      return res.status(404).json({ error: 'Country not found. Please check the spelling and try again.' });
+    }
+
+    const countryData = capitalRes.data.data;
+    const capital = countryData.capital;
+
+    const regionRes = await axios.get(`https://api.first.org/data/v1/countries?q=${country}`);
+    const regionData = Object.values(regionRes.data.data || {})[0];
+    const region = regionData ? regionData.region : null;
+
     const result = await pool.query(
       'INSERT INTO destinations (country, capital, population, region) VALUES ($1, $2, $3, $4) RETURNING *',
-      [country, countryInfo.capital[0], countryInfo.population, countryInfo.region]
+      [country, capital, null, region]
     );
+
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error(err);

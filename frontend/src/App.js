@@ -58,7 +58,7 @@ function App() {
           <li key={dest.id}>
             <h3>{dest.country}</h3>
             <p>Capital: {dest.capital}</p>
-            <p>Population: {dest.population.toLocaleString()}</p>
+            <p>Population: {dest.population ? dest.population.toLocaleString() : 'N/A'}</p>
             <p>Region: {dest.region}</p>
             <button onClick={() => handleDelete(dest.id)}>Remove</button>
           </li>
