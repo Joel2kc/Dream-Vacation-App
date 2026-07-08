@@ -70,3 +70,51 @@ Database data is stored in a named Docker volume so it persists across container
 
 ![The application open in the browser at http://localhost and countries were successfully added](screenshots/Countries%20added.jpeg)
 *The application running in the browser at http://localhost and countries successfully added and displayed*
+
+# Continuous Integration and Continuous Deployment
+
+## Overview
+
+The Dream Vacation App now builds, tests and ships itself. Every push to the main or dev branch triggers an automated pipeline through GitHub Actions that checks the code, builds fresh Docker images for the frontend and backend, and pushes those images to Docker Hub tagged with the commit that produced them. This removes the need for any manual image building once code is merged.
+
+![GitHub Actions tab showing the list of workflow runs](screenshots/1.jpeg)
+GitHub Actions tab showing the list of workflow runs
+
+## Branching strategy
+
+The project uses two branches to separate active development from stable code. All new work happens on the dev branch first. Changes are committed and pushed there, and the pipeline runs against every push to confirm the code builds cleanly and the images are pushed successfully before anything touches main.
+
+Once a set of changes has been tested on dev and the pipeline has run without issues, it gets merged into main through a pull request rather than being pushed there directly. This keeps main as a reliable, working version of the app at all times, since nothing reaches it without first proving itself on dev.
+
+![Pull request merging dev into main, showing the merge completed successfully](screenshots/2.jpeg)
+
+![Pull Request merged dev into main](screenshots/3.jpeg)
+Pull Request merged dev into main
+
+## Why two workflows
+
+The frontend and backend are separate applications with separate dependencies, so they are handled by two independent workflow files. A change to the backend only triggers the backend pipeline, and a change to the frontend only triggers the frontend pipeline. This keeps each run fast and keeps the logs focused on the part of the app that actually changed.
+
+
+## How a pipeline run works
+
+Each workflow is split into two stages. The first stage installs dependencies, runs lint checks and any available tests, then builds the Docker image locally to confirm it compiles without errors. Nothing leaves the runner at this point. The second stage only runs after the first stage passes, and only when the trigger was a direct push rather than a pull request. This stage logs into Docker Hub and pushes the newly built image.
+
+Keeping pull requests from pushing images is intentional. GitHub does not expose stored secrets to workflows triggered by pull requests from outside contributors, so image pushes are limited to trusted pushes on the two protected branches.
+
+## Image tagging
+
+Every image pushed to Docker Hub carries two tags. One is the short commit SHA that produced it, giving a permanent record of exactly which version of the code is inside that image. The other is latest, kept for convenience when pulling the newest build without needing to look up a specific commit.
+
+![Docker Hub repository page showing the frontend repository with several tagged images listed](screenshots/4.jpeg)
+
+![Docker Hub repository page showing the backend repository with several tagged images listed](screenshots/5.jpeg)
+Docker Hub repository page showing the backend and frontend repositories with several tagged images listed
+
+## Secrets
+
+Docker Hub authentication is handled through two repository secrets, DOCKER_USERNAME and DOCKER_TOKEN. The token is a Docker Hub access token rather than the account password, generated with limited scope and revocable at any time without affecting the main account credentials.
+
+## Local development
+
+Docker Compose is still used for running the full stack locally during development, bringing up the Postgres database, backend and frontend together on a shared network. The pipeline does not replace this, it automates what used to be a manual build and push step once the code is ready to leave a developer's machine.
