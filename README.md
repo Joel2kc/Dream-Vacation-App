@@ -70,5 +70,3 @@ Database data is stored in a named Docker volume so it persists across container
 
 ![The application open in the browser at http://localhost and countries were successfully added](screenshots/Countries%20added.jpeg)
 *The application running in the browser at http://localhost and countries successfully added and displayed*
-
-CICD
