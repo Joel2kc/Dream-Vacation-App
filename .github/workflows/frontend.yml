@@ -70,28 +70,17 @@ jobs:
   deploy:
     name: Deploy to EC2
     needs: push-to-registry
-    if: github.event_name == 'push'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Copy files to EC2
-        uses: appleboy/scp-action@v0.1.7
+      - name: SSH into EC2 and redeploy
+        uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "docker-compose.prod.yml,backend,frontend"
-          target: "/home/ubuntu/dream-vacation-app"
-
-      - name: Deploy on EC2
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
+          username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/ubuntu/dream-vacation-app
-            docker-compose -f docker-compose.prod.yml pull
-            docker-compose -f docker-compose.prod.yml up -d
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
