@@ -64,3 +64,21 @@ jobs:
           tags: |
             joel2kc/dream-vacation-backend:${{ github.sha }}
             joel2kc/dream-vacation-backend:latest
+
+  deploy:
+    name: Deploy to EC2
+    needs: push-to-registry
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH into EC2 and redeploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/dream-vacation-app
+            docker compose pull
+            docker compose up -d
+            docker image prune -f    

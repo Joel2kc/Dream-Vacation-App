@@ -115,6 +115,6 @@ Docker Hub repository page showing the backend and frontend repositories with se
 
 Docker Hub authentication is handled through two repository secrets, DOCKER_USERNAME and DOCKER_TOKEN. The token is a Docker Hub access token rather than the account password, generated with limited scope and revocable at any time without affecting the main account credentials.
 
-## Local development
+## Local development.
 
 Docker Compose is still used for running the full stack locally during development, bringing up the Postgres database, backend and frontend together on a shared network. The pipeline does not replace this, it automates what used to be a manual build and push step once the code is ready to leave a developer's machine.
