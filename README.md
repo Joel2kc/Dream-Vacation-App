@@ -118,3 +118,38 @@ Docker Hub authentication is handled through two repository secrets, DOCKER_USER
 ## Local development.
 
 Docker Compose is still used for running the full stack locally during development, bringing up the Postgres database, backend and frontend together on a shared network. The pipeline does not replace this, it automates what used to be a manual build and push step once the code is ready to leave a developer's machine.
+
+# AWS Infrastructure and Deployment
+
+## Overview
+
+This part of the project moves the Dream Vacation App off a local setup and onto real AWS infrastructure. The networking was built by hand in the AWS console so every piece could be understood on its own, and the existing CI/CD pipeline was extended so that once code reaches the main branch, it also deploys itself straight to an EC2 instance.
+
+## Networking
+
+A custom VPC named dream_vpc was created with the range 10.0.0.0/16, along with a subnet called dream_subnet using 10.0.1.0/24. An internet gateway named dream_igw was attached to the VPC, and a route table named dream_rt was set up with a route pointing all outbound traffic to that gateway, then associated with the subnet. Together these four pieces give the subnet an actual path to and from the internet, which is what the EC2 instance depends on to be reachable later.
+
+![VPC resource map showing dream_vpc, dream_subnet, dream_rt and dream_igw connected](screenshots/Resource-map.jpeg)
+
+## EC2 Instance
+
+An Ubuntu EC2 instance was launched inside dream_subnet with a public IP enabled, so it sits properly inside the custom network rather than the default one. A user data script ran automatically on first boot to install Docker and the Docker Compose plugin, meaning the server was ready to run containers the moment it came online, without needing to SSH in and install anything by hand.
+
+![EC2 instance running inside dream_vpc with its public IP address shown](screenshots/EC2-instance.jpeg)
+
+## Deployment through the pipeline
+
+The existing GitHub Actions workflows for both frontend and backend were extended with a final deploy stage. This stage only runs after the build and image push stages succeed, and only when the change has landed on the main branch, not on dev. It connects to the EC2 instance over SSH using a dedicated key generated just for this purpose, pulls the freshly pushed Docker images, and restarts the app with Docker Compose.
+
+![Backend pipeline showing build, push and deploy stages all completed successfully](screenshots/Backend-workflow.jpeg)
+
+![Frontend pipeline showing build, push and deploy stages all completed successfully](screenshots/Frontend-workflow.jpeg)
+
+Keeping the deploy stage limited to main mirrors the same branching approach used earlier in the project. Dev is where changes get tested first, and only code that has already proven itself there gets merged in and allowed to touch the live server.
+
+## Result
+
+Once the pipeline completes, the updated app is live and reachable directly through the EC2 instance's public IP, with no manual steps required after the initial setup.
+
+![Dream Vacation App running in the browser at the EC2 public IP address](screenshots/App-running-on-publicip.jpeg)
+
