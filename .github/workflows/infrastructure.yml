@@ -2,7 +2,7 @@ name: Provision Infrastructure
 
 on:
   push:
-    branches: [main]
+    branches: [main,dev]
     paths:
       - 'terraform/**'
 
