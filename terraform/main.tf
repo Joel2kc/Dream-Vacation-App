@@ -26,5 +26,3 @@ module "cloudwatch" {
   alarm_name  = "dream-app-high-cpu"
   instance_id = module.ec2.instance_id
 }
-
-# infrastructure managed by terraform modules
