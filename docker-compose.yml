@@ -21,8 +21,7 @@ services:
     restart: unless-stopped
 
   backend:
-    build:
-      context: ./backend
+    image: joel2kc/dream-vacation-backend:latest
     container_name: vacation_backend
     environment:
       DATABASE_URL: ${DATABASE_URL}
@@ -36,8 +35,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    build:
-      context: ./frontend
+    image: joel2kc/dream-vacation-frontend:latest
     container_name: vacation_frontend
     ports:
       - "80:80"
