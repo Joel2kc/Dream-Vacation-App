@@ -67,18 +67,47 @@ jobs:
 
   deploy:
     name: Deploy to EC2
-    needs: push-to-registry
+    needs: [push-to-registry]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-north-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Get instance IP from state
+        id: tf_output
+        working-directory: terraform
+        run: |
+          terraform init
+          echo "ip=$(terraform output -raw instance_public_ip)" >> "$GITHUB_OUTPUT"
+
+      - name: Copy compose file to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ steps.tf_output.outputs.ip }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.yml"
+          target: "/home/ubuntu/dream-vacation-app"
+
       - name: SSH into EC2 and redeploy
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
+          host: ${{ steps.tf_output.outputs.ip }}
+          username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/ubuntu/dream-vacation-app
             docker compose pull
             docker compose up -d
-            docker image prune -f    
+            docker image prune -f

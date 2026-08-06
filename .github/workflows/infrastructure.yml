@@ -1,0 +1,37 @@
+name: Provision Infrastructure
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'terraform/**'
+
+jobs:
+  terraform:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-north-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init
+        working-directory: terraform
+        run: terraform init
+
+      - name: Terraform plan
+        working-directory: terraform
+        run: terraform plan -var="ssh_public_key=${{ secrets.TF_SSH_PUBLIC_KEY }}"
+
+      - name: Terraform apply
+        working-directory: terraform
+        run: terraform apply -auto-approve -var="ssh_public_key=${{ secrets.TF_SSH_PUBLIC_KEY }}"
