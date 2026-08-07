@@ -93,6 +93,9 @@ jobs:
           terraform init
           echo "ip=$(terraform output -raw instance_public_ip)" >> "$GITHUB_OUTPUT"
 
+      - name: Wait for instance to finish booting
+        run: sleep 90
+
       - name: Copy compose file to server
         uses: appleboy/scp-action@v0.1.7
         with:
