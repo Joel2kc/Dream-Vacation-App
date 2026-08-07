@@ -22,7 +22,7 @@ jobs:
           aws-region: eu-north-1
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3 #launch
+        uses: hashicorp/setup-terraform@v3
 
       - name: Terraform init
         working-directory: terraform
